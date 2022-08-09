@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "app",
     "egui_demo_app",
     "egui_demo_lib",
     "egui_extras",
