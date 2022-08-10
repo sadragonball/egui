@@ -40,7 +40,7 @@ impl RenderResources {
     }
 }
 
-#[repc(C)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Uniform {
     pub position: [f32; 3],

@@ -140,7 +140,8 @@ impl eframe::App for VolumeRenderer {
 impl VolumeRenderer {
     fn painting(&mut self, ui: &mut egui::Ui) {
         let (rect, response) =
-            ui.allocate_exact_size(egui::Vec2::splat(300.0), egui::Sense::drag());
+
+            ui.allocate_exact_size(egui::Vec2::new(800., 600.), egui::Sense::drag());
 
         self.angle += response.drag_delta().x * 0.01;
 

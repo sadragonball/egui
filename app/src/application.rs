@@ -49,10 +49,10 @@ impl Application {
 
 impl App for Application {
     fn update(&mut self, ctx: &Context, frame: &mut Frame) {
-        if self.state.selected_anchor.is_empty() {
-            let selected_anchor = self.modules_iter_mut().next().unwrap().0.to_owned();
-            self.state.selected_anchor = selected_anchor;
-        }
+        // if self.state.selected_anchor.is_empty() {
+        //     let selected_anchor = self.modules_iter_mut().next().unwrap().0.to_owned();
+        //     self.state.selected_anchor = selected_anchor;
+        // }
 
         egui::TopBottomPanel::top("app_top_bar").show(ctx, |ui| {
             egui::trace!(ui);
@@ -75,7 +75,8 @@ impl App for Application {
                 self.left_panel_contents(ui, frame);
             });
 
-        self.show_selected_module(ctx, frame);
+        self.volume_renderer.update(ctx, frame);
+        // self.show_selected_module(ctx, frame);
     }
 
     #[cfg(feature = "persistence")]
@@ -122,13 +123,13 @@ impl Application {
 
         ui.separator();
 
-        let mut selected_anchor = self.state.selected_anchor.to_owned();
-        for (name, anchor, _module) in self.modules_iter_mut() {
-            if ui.selectable_label(selected_anchor == anchor, name).clicked() {
-                selected_anchor = anchor.to_owned();
-            }
-        }
-        self.state.selected_anchor = selected_anchor;
+        // let mut selected_anchor = self.state.selected_anchor.to_owned();
+        // for (name, anchor, _module) in self.modules_iter_mut() {
+        //     if ui.selectable_label(selected_anchor == anchor, name).clicked() {
+        //         selected_anchor = anchor.to_owned();
+        //     }
+        // }
+        // self.state.selected_anchor = selected_anchor;
         egui::warn_if_debug_build(ui);
     }
 }

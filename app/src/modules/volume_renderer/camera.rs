@@ -1,4 +1,5 @@
 use wgpu::util::DeviceExt;
+use crate::utils::NonZeroSized;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
