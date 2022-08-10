@@ -26,13 +26,9 @@ persistence = [
 screen_reader = ["eframe/screen_reader"] # experimental
 serde = [
     "dep:serde",
-    "egui_demo_lib/serde",
     "egui_extras/serde",
     "egui/serde",
 ]
-syntax_highlighting = ["egui_demo_lib/syntax_highlighting"]
-
-glow = ["eframe/glow"]
 wgpu = ["eframe/wgpu", "bytemuck", "pollster", "dep:wgpu"]
 
 
@@ -40,7 +36,7 @@ wgpu = ["eframe/wgpu", "bytemuck", "pollster", "dep:wgpu"]
 chrono = { version = "0.4", features = ["js-sys", "wasmbind"] }
 eframe = { version = "0.18.0", path = "../eframe", default-features = false }
 egui = { version = "0.18.0", path = "../egui", features = ["extra_debug_asserts"] }
-egui_demo_lib = { version = "0.18.0", path = "../egui_demo_lib", features = ["chrono"] }
+#egui_demo_lib = { version = "0.18.0", path = "../egui_demo_lib", features = ["chrono"] }
 
 # Optional dependencies:
 

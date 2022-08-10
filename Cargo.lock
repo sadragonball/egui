@@ -105,7 +105,6 @@ dependencies = [
  "console_error_panic_hook",
  "eframe",
  "egui",
- "egui_demo_lib",
  "egui_extras",
  "ehttp",
  "image 0.24.2",
