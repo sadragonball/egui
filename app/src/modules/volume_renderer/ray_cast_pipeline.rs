@@ -2,7 +2,7 @@ use std::path::Path;
 use wgpu::util::DeviceExt;
 use eframe::egui_wgpu;
 use crate::modules::volume_renderer::camera::CameraBinding;
-use crate::modules::volume_renderer::render_resources::{RenderResources, Uniform};
+use crate::modules::volume_renderer::render_resources::{UniformBinding, Uniform};
 use crate::utils::shader_compiler::ShaderCompiler;
 
 pub struct RayCastPipeline {
@@ -114,7 +114,7 @@ impl<'a> RayCastPipeline {
     pub fn record<'pass>(
         &'a self,
         render_pass: &mut wgpu::RenderPass<'pass>,
-        render_resources: &'a RenderResources,
+        render_resources: &'a UniformBinding,
         camera_binding: &'a CameraBinding,
     )
         where 'a: 'pass {

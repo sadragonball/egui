@@ -1,12 +1,12 @@
 use wgpu::util::DeviceExt;
 use crate::utils::NonZeroSized;
 
-pub struct RenderResources {
+pub struct UniformBinding {
     pub bind_group: wgpu::BindGroup,
     uniform_buffer: wgpu::Buffer
 }
 
-impl RenderResources {
+impl UniformBinding {
     pub fn new(device: &wgpu::Device) -> Self {
         let buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {

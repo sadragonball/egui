@@ -5,10 +5,15 @@ use eframe::{egui_wgpu, Storage};
 use eframe::emath::Vec2;
 use eframe::epaint::Rgba;
 use egui::{Visuals};
+use crate::modules::volume_renderer::ray_cast_pipeline::RayCastPipeline;
+use crate::modules::volume_renderer::render_resources::{Uniform, UniformBinding};
+use crate::modules::volume_renderer::volume_texture::VolumeTexture;
+use crate::utils::shader_compiler::ShaderCompiler;
 
 mod camera;
 mod ray_cast_pipeline;
 mod render_resources;
+mod volume_texture;
 
 //待定
 // trait BasicPipeline {
@@ -19,79 +24,30 @@ mod render_resources;
 // }
 
 pub struct VolumeRenderer {
-    angle: f32,
+    shader_compiler: ShaderCompiler,
+    volume_texture: VolumeTexture,
+    pipeline: RayCastPipeline,
+    uniform: Uniform,
+    uniform_binding: UniformBinding,
 }
 
 impl VolumeRenderer {
-    pub fn new<'a>(cc: &'a eframe::CreationContext<'a>) -> Self {
+    pub fn new<'a>(&mut self, cc: &'a eframe::CreationContext<'a>) -> Self {
         let wgpu_render_state = cc.wgpu_render_state.as_ref().expect("wgpu enabled");
         let device = &wgpu_render_state.device;
 
+        let mut shader_compiler = ShaderCompiler::new();
 
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: None,
-            source: wgpu::ShaderSource::Wgsl(include_str!("./custom3d_wgpu_shader.wgsl").into()),
-        });
+        let path = std::path::Path::new("./app/raws/bonsai_256x256x256_uint8.raw");
 
-        let bind_group_layout = device.create_bind_group_layout(
-            &wgpu::BindGroupLayoutDescriptor {
-                label: None,
-                entries: &[
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::VERTEX,
-                        ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Uniform,
-                            has_dynamic_offset: false,
-                            min_binding_size: None
-                        },
-                        count: None
-                    }
-                ]
-            }
-        );
+        let volume_texture =
+            VolumeTexture::new(&wgpu_render_state.device, &wgpu_render_state.queue, path);
 
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: None,
-            bind_group_layouts: &[&bind_group_layout],
-            push_constant_ranges: &[],
-        });
+        let path = std::path::Path::new("./app/src/shaders/raycast_naive.wgsl");
 
-        let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: None,
-            layout: Some(&pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &shader,
-                entry_point: "vs_main",
-                buffers: &[],
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &shader,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu_render_state.target_format.into())],
-            }),
-            primitive: wgpu::PrimitiveState::default(),
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            multiview: None,
-        });
+        let pipeline =
+            RayCastPipeline::from_path(wgpu_render_state, path, &mut self.shader_compiler);
 
-        let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: None,
-            contents: bytemuck::cast_slice(&[0.0]),
-            usage: wgpu::BufferUsages::COPY_DST
-                | wgpu::BufferUsages::MAP_WRITE
-                | wgpu::BufferUsages::UNIFORM,
-        });
-
-        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: None,
-            layout: &bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: uniform_buffer.as_entire_binding(),
-            }],
-        });
 
         // Because the graphics pipeline must have the same lifetime as the egui render pass,
         // instead of storing the pipeline in our `Custom3D` struct, we insert it into the
@@ -100,14 +56,14 @@ impl VolumeRenderer {
             .egui_rpass
             .write()
             .paint_callback_resources
-            .insert(TriangleRenderResources {
-                pipeline,
-                bind_group,
-                uniform_buffer,
-            });
+            .insert(());
 
         Self {
-            angle: 0.
+            shader_compiler,
+            volume_texture,
+            pipeline,
+            uniform: Uniform::default(),
+            uniform_binding: UniformBinding::new(&device)
         }
     }
 }
