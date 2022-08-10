@@ -4,16 +4,30 @@ use wgpu::util::DeviceExt;
 use eframe::{egui_wgpu, Storage};
 use eframe::emath::Vec2;
 use eframe::epaint::Rgba;
-use egui::{ Visuals};
+use egui::{Visuals};
 
-pub struct VolumeRenderer{
+mod camera;
+mod ray_cast_pipeline;
+mod render_resources;
+
+//待定
+// trait BasicPipeline {
+//     fn from_path(&self,
+//                  device: &wgpu::Device,
+//                  path: &std::path::Path,
+//                  shader_compiler: &mut crate::utils::ShaderCompiler) -> Self;
+// }
+
+pub struct VolumeRenderer {
     angle: f32,
 }
 
-impl VolumeRenderer{
+impl VolumeRenderer {
     pub fn new<'a>(cc: &'a eframe::CreationContext<'a>) -> Self {
         let wgpu_render_state = cc.wgpu_render_state.as_ref().expect("wgpu enabled");
         let device = &wgpu_render_state.device;
+
+
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: None,
             source: wgpu::ShaderSource::Wgsl(include_str!("./custom3d_wgpu_shader.wgsl").into()),
@@ -102,7 +116,7 @@ impl eframe::App for VolumeRenderer {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::ScrollArea::both()
-                .auto_shrink([false;2])
+                .auto_shrink([false; 2])
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.spacing_mut().item_spacing.x = 0.0;
