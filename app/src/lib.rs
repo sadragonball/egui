@@ -1,3 +1,5 @@
+extern crate core;
+
 mod application;
 mod modules;
 mod ui;

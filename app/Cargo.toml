@@ -39,7 +39,7 @@ egui = { version = "0.18.0", path = "../egui", features = ["extra_debug_asserts"
 naga = { version = "0.9.0", features = ["span", "spv-out", "wgsl-in"] }
 glam = "0.21.3"
 color-eyre = "0.6.2"
-
+tracing = "0.1"
 
 #egui_demo_lib = { version = "0.18.0", path = "../egui_demo_lib", features = ["chrono"] }
 
@@ -64,7 +64,7 @@ serde = { version = "1", optional = true, features = ["derive"] }
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tracing-subscriber = "0.3"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # web:
 [target.'cfg(target_arch = "wasm32")'.dependencies]

@@ -1,5 +1,8 @@
+use std::io::{Read, Write};
 use std::num::NonZeroU32;
+use egui::trace;
 
+#[derive(Debug)]
 pub struct VolumeTexture {
     pub texture: wgpu::Texture,
     pub bind_group: wgpu::BindGroup,
@@ -29,8 +32,29 @@ impl VolumeTexture {
         ],
     };
 
+    #[tracing::instrument]
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, path: &std::path::Path) -> Self {
-        let data = include_bytes!(path);
+        let file = std::fs::File::open(path);
+        let mut data: Vec<u8> = vec![];
+        tracing::debug_span!("hello");
+
+        match file {
+            Ok(mut file) => {
+                let result = file.read_to_end(&mut data);
+
+                match result {
+                    Ok(size) => {
+                        println!("{}", size);
+                    },
+                    Err(err) => {
+                        panic!("write bytes failed!\n{}", err);
+                    }
+                }
+            },
+            Err(err) => {
+                panic!("open file failed!\n{}", err);
+            }
+        };
         let size = wgpu::Extent3d {
             width: 256,
             height: 256,
@@ -52,7 +76,7 @@ impl VolumeTexture {
 
         queue.write_texture(
             texture.as_image_copy(),
-            data,
+            data.as_slice(),
             wgpu::ImageDataLayout {
                 offset: 0,
                 bytes_per_row: NonZeroU32::new(256),

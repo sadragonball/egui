@@ -32,21 +32,21 @@ pub struct VolumeRenderer {
 }
 
 impl VolumeRenderer {
-    pub fn new<'a>(&mut self, cc: &'a eframe::CreationContext<'a>) -> Self {
+    pub fn new<'a>(cc: &'a eframe::CreationContext<'a>) -> Self {
         let wgpu_render_state = cc.wgpu_render_state.as_ref().expect("wgpu enabled");
         let device = &wgpu_render_state.device;
 
         let mut shader_compiler = ShaderCompiler::new();
 
-        let path = std::path::Path::new("./app/raws/bonsai_256x256x256_uint8.raw");
+        let path = std::path::Path::new("G:\\Github\\egui\\app\\raws\\bonsai_256x256x256_uint8.raw");
 
         let volume_texture =
             VolumeTexture::new(&wgpu_render_state.device, &wgpu_render_state.queue, path);
 
-        let path = std::path::Path::new("./app/src/shaders/raycast_naive.wgsl");
+        let path = std::path::Path::new("app/src/shaders/raycast_naive.wgsl");
 
         let pipeline =
-            RayCastPipeline::from_path(wgpu_render_state, path, &mut self.shader_compiler);
+            RayCastPipeline::from_path(wgpu_render_state, path, &mut shader_compiler);
 
 
         // Because the graphics pipeline must have the same lifetime as the egui render pass,
@@ -80,6 +80,7 @@ impl eframe::App for VolumeRenderer {
                         ui.hyperlink_to("wgpu", "https://wgpu.rs");
                         ui.label(" Rust graphics api");
                     });
+
                     ui.label("It's not a very impressive demo, but it shows you can embed 3D inside of egui.");
 
                     egui::Frame::canvas(ui.style()).show(ui, |ui| {
@@ -99,10 +100,10 @@ impl VolumeRenderer {
 
             ui.allocate_exact_size(egui::Vec2::new(800., 600.), egui::Sense::drag());
 
-        self.angle += response.drag_delta().x * 0.01;
+        // self.angle += response.drag_delta().x * 0.01;
 
         // Clone locals so we can move them into the paint callback:
-        let angle = self.angle;
+        // let angle = self.angle;
 
         // The callback function for WGPU is in two stages: prepare, and paint.
         //
@@ -112,22 +113,22 @@ impl VolumeRenderer {
         //
         // The paint callback is called after prepare and is given access to the render pass, which
         // can be used to issue draw commands.
-        let cb = egui_wgpu::CallbackFn::new()
-            .prepare(move |device, queue, paint_callback_resources| {
-                let resources: &TriangleRenderResources = paint_callback_resources.get().unwrap();
-                resources.prepare(device, queue, angle);
-            })
-            .paint(move |_info, rpass, paint_callback_resources| {
-                let resources: &TriangleRenderResources = paint_callback_resources.get().unwrap();
-                resources.paint(rpass);
-            });
-
-        let callback = egui::PaintCallback {
-            rect,
-            callback: Arc::new(cb),
-        };
-
-        ui.painter().add(callback);
+        // let cb = egui_wgpu::CallbackFn::new()
+        //     .prepare(move |device, queue, paint_callback_resources| {
+        //         let resources: &TriangleRenderResources = paint_callback_resources.get().unwrap();
+        //         resources.prepare(device, queue, angle);
+        //     })
+        //     .paint(move |_info, rpass, paint_callback_resources| {
+        //         let resources: &TriangleRenderResources = paint_callback_resources.get().unwrap();
+        //         resources.paint(rpass);
+        //     });
+        //
+        // let callback = egui::PaintCallback {
+        //     rect,
+        //     callback: Arc::new(cb),
+        // };
+        //
+        // ui.painter().add(callback);
     }
 }
 
