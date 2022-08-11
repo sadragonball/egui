@@ -3,7 +3,7 @@ use wgpu::RenderPass;
 use wgpu::util::DeviceExt;
 use eframe::egui_wgpu;
 use crate::modules::volume_renderer::camera::CameraBinding;
-use crate::modules::volume_renderer::render_resources::{GlobalUniformBinding, GlobalUniform};
+use crate::modules::volume_renderer::global_uniform::{GlobalUniformBinding, GlobalUniform};
 use crate::modules::volume_renderer::volume_texture::VolumeTexture;
 use crate::utils::shader_compiler::ShaderCompiler;
 

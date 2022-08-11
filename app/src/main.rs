@@ -1,6 +1,6 @@
 fn main() {
     let filter_layer = tracing_subscriber::EnvFilter::try_from_default_env()
-        .or_else(|_| tracing_subscriber::EnvFilter::try_new("debug"))
+        .or_else(|_| tracing_subscriber::EnvFilter::try_new("info"))
         .unwrap();
 
 

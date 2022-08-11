@@ -477,7 +477,7 @@ mod wgpu_integration {
                     wgpu::PowerPreference::HighPerformance,
                     wgpu::DeviceDescriptor {
                         label: None,
-                        features: wgpu::Features::default(),
+                        features: wgpu::Features::default() | wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
                         limits: wgpu::Limits::default(),
                     },
                     wgpu::PresentMode::Fifo,
