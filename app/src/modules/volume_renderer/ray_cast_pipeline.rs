@@ -1,5 +1,5 @@
 use std::path::Path;
-use wgpu::RenderPass;
+use wgpu::{BindGroup, RenderPass};
 use wgpu::util::DeviceExt;
 use eframe::egui_wgpu;
 use crate::modules::volume_renderer::camera::CameraBinding;
@@ -126,7 +126,12 @@ impl<'a> RayCastPipeline {
 
         render_pass.set_bind_group(0, &uniform_binding.bind_group, &[]);
         render_pass.set_bind_group(1, &camera_binding.bind_group, &[]);
-        render_pass.set_bind_group(2, &volume_texture.bind_group, &[]);
+        match &volume_texture.bind_group {
+            None => {}
+            Some(bind_group) => {
+                render_pass.set_bind_group(2, &bind_group, &[]);
+            }
+        }
         render_pass.draw(0..self.vertex_count as _, 0..1);
     }
 }

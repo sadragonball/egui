@@ -57,7 +57,7 @@ impl VolumeRenderer {
         let volume_texture =
             VolumeTexture::new(&wgpu_render_state.device, &wgpu_render_state.queue, path);
 
-        let path = std::path::Path::new("E:\\GitHub\\egui\\app\\src\\shaders\\raycast_naive.wgsl");
+        let path = std::path::Path::new("shaders/raycast_naive.wgsl");
 
         let pipeline =
             RayCastPipeline::from_path(wgpu_render_state, path, &mut shader_compiler);
@@ -89,7 +89,7 @@ impl VolumeRenderer {
                 }
             ));
         Self {
-            operation: Operation::default()
+            operation: Operation::default(),
         }
     }
 }
@@ -107,6 +107,11 @@ impl eframe::App for VolumeRenderer {
                         ui.label(" Rust graphics api");
                     });
 
+                    if ui.button("Open file…").clicked() {
+                        if let Some(path) = rfd::FileDialog::new().pick_file() {
+                            println!("{:?}", path.display().to_string());
+                        }
+                    }
                     egui::Frame::canvas(ui.style()).show(ui, |ui| {
                         self.painting(ui);
                     });

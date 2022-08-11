@@ -4,9 +4,21 @@ use egui::trace;
 
 #[derive(Debug)]
 pub struct VolumeTexture {
-    pub texture: wgpu::Texture,
-    pub bind_group: wgpu::BindGroup,
-    pub sampler: wgpu::Sampler
+    pub texture: Option<wgpu::Texture>,
+    pub bind_group: Option<wgpu::BindGroup>,
+    pub sampler: Option<wgpu::Sampler>,
+    pub path: Option<String>
+}
+
+impl Default for VolumeTexture {
+    fn default() -> Self {
+        Self {
+            texture: None,
+            bind_group: None,
+            sampler: None,
+            path: None
+        }
+    }
 }
 
 impl VolumeTexture {
@@ -35,10 +47,11 @@ impl VolumeTexture {
     #[tracing::instrument]
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, path: &std::path::Path) -> Self {
         let mut file = std::fs::File::open(path).unwrap();
+        println!("Root Dir {:?}", std::path::Component::RootDir);
         let mut data: Vec<u8> = vec![];
 
         file.read_to_end(&mut data).expect("read file failed");
- 
+
         let size = wgpu::Extent3d {
             width: 256,
             height: 256,
@@ -96,9 +109,10 @@ impl VolumeTexture {
         );
 
         Self {
-            texture,
-            bind_group,
-            sampler
+            texture: texture.into(),
+            bind_group: bind_group.into(),
+            sampler: sampler.into(),
+            path: Some(String::from(path.to_str().unwrap()))
         }
     }
 }

@@ -110,7 +110,7 @@ fn fs_main(vin: VertexOutput) -> @location(0) float4 {
         var val_color = vec4<f32>(vertigo(val.r), val.r);
 
 		// Opacity correction
-//         val_color.a = 1.0 - pow(1.0 - val_color.a, dt_scale);
+         val_color.a = 1.0 - pow(1.0 - val_color.a, dt_scale);
         var tmp = color.rgb + (1.0 - color.a) * val_color.a * val_color.xyz + background.rgb * background.a * (1. - val_alpha);
         color = vec4<f32>(tmp, color.a);
         color.a = color.a + (1.0 - color.a) * val_color.a;

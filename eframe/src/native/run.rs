@@ -467,7 +467,6 @@ mod wgpu_integration {
                 .build(event_loop)
                 .unwrap();
 
-            println!("default features{:?}", wgpu::Features::default());
 
             // SAFETY: `window` must outlive `painter`.
             #[allow(unsafe_code)]
