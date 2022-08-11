@@ -23,9 +23,21 @@ mod volume_texture;
 //                  path: &std::path::Path,
 //                  shader_compiler: &mut crate::utils::ShaderCompiler) -> Self;
 // }
+#[derive(Copy, Clone)]
+pub struct Operation {
+    drag_delta: egui::Vec2,
+}
+
+impl Default for Operation {
+    fn default() -> Self {
+        Self {
+            drag_delta: egui::Vec2::default(),
+        }
+    }
+}
 
 pub struct VolumeRenderer {
-    drag_delta: egui::Vec2,
+    operation: Operation,
 }
 
 
@@ -51,10 +63,10 @@ impl VolumeRenderer {
             RayCastPipeline::from_path(wgpu_render_state, path, &mut shader_compiler);
 
         let camera = Camera::new(
-            1.,
+            2.,
             0.5,
             1.,
-            (0., 0., 0.).into(),
+            (0.5, 0.5, 0.5).into(),
             Self::WIDTH as f32 / Self::HEIGHT as f32,
         );
 
@@ -77,14 +89,14 @@ impl VolumeRenderer {
                 }
             ));
         Self {
-            drag_delta: egui::Vec2::default()
+            operation: Operation::default()
         }
     }
 }
 
 impl eframe::App for VolumeRenderer {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ctx, |ui: &mut egui::Ui| {
             egui::ScrollArea::both()
                 .auto_shrink([false; 2])
                 .show(ui, |ui| {
@@ -95,13 +107,11 @@ impl eframe::App for VolumeRenderer {
                         ui.label(" Rust graphics api");
                     });
 
-                    ui.label("It's not a very impressive demo, but it shows you can embed 3D inside of egui.");
-
                     egui::Frame::canvas(ui.style()).show(ui, |ui| {
                         self.painting(ui);
                     });
 
-                    ui.label("Drag to rotate!");
+                    ui.label("ni hao shi jie");
                 });
         });
     }
@@ -115,14 +125,19 @@ impl VolumeRenderer {
                 egui::Vec2::new(Self::WIDTH as f32, Self::HEIGHT as f32),
                 egui::Sense::drag()
             );
-        self.drag_delta = response.drag_delta();
 
-        let drag_delta = self.drag_delta;
+        self.operation = Operation {
+            drag_delta: response.drag_delta()
+        };
+
+        let operation = Operation {
+            drag_delta: response.drag_delta()
+        };
 
         let func = egui_wgpu::CallbackFn::new()
             .prepare(move |device, queue, paint_callback_resources| {
                 let resources: &mut RenderResources = paint_callback_resources.get_mut().unwrap();
-                resources.prepare(device, queue, drag_delta);
+                resources.prepare(device, queue, operation);
             })
             .paint(move |_info, rpass, paint_callback_resources| {
                 let resources: &RenderResources = paint_callback_resources.get().unwrap();
@@ -149,10 +164,10 @@ struct RenderResources {
 
 impl RenderResources {
     pub const ROTATE_SPEED: f32 = 0.005f32;
-    fn prepare(&mut self, _device: &wgpu::Device, queue: &wgpu::Queue, drag_delta: egui::Vec2) {
+    fn prepare(&mut self, _device: &wgpu::Device, queue: &wgpu::Queue, operation: Operation) {
         // Update our uniform buffer with the angle from the UI
-        self.camera.add_yaw(-drag_delta.x as f32 * Self::ROTATE_SPEED);
-        self.camera.add_pitch(-drag_delta.y as f32 * Self::ROTATE_SPEED);
+        self.camera.add_yaw(-operation.drag_delta.x as f32 * Self::ROTATE_SPEED);
+        self.camera.add_pitch(-operation.drag_delta.y as f32 * Self::ROTATE_SPEED);
         self.camera_binding.update(queue, &mut self.camera);
     }
 
