@@ -1,12 +1,14 @@
 use std::sync::Arc;
 use std::time::Duration;
+use wgpu::Device;
 use wgpu::util::DeviceExt;
 use eframe::{egui_wgpu, Storage};
 use eframe::emath::Vec2;
 use eframe::epaint::Rgba;
 use egui::{Visuals};
+use crate::modules::volume_renderer::camera::{Camera, CameraBinding};
 use crate::modules::volume_renderer::ray_cast_pipeline::RayCastPipeline;
-use crate::modules::volume_renderer::render_resources::{Uniform, UniformBinding};
+use crate::modules::volume_renderer::render_resources::{GlobalUniform, GlobalUniformBinding};
 use crate::modules::volume_renderer::volume_texture::VolumeTexture;
 use crate::utils::shader_compiler::ShaderCompiler;
 
@@ -23,30 +25,37 @@ mod volume_texture;
 //                  shader_compiler: &mut crate::utils::ShaderCompiler) -> Self;
 // }
 
-pub struct VolumeRenderer {
-    shader_compiler: ShaderCompiler,
-    volume_texture: VolumeTexture,
-    pipeline: RayCastPipeline,
-    uniform: Uniform,
-    uniform_binding: UniformBinding,
-}
+pub struct VolumeRenderer {}
+
 
 impl VolumeRenderer {
+    pub const WIDTH: u32 = 800;
+    pub const HEIGHT: u32 = 600;
+
     pub fn new<'a>(cc: &'a eframe::CreationContext<'a>) -> Self {
         let wgpu_render_state = cc.wgpu_render_state.as_ref().expect("wgpu enabled");
+        
         let device = &wgpu_render_state.device;
 
         let mut shader_compiler = ShaderCompiler::new();
 
-        let path = std::path::Path::new("G:\\Github\\egui\\app\\raws\\bonsai_256x256x256_uint8.raw");
+        let path = std::path::Path::new("E:\\Github\\egui\\app\\raws\\bonsai_256x256x256_uint8.raw");
 
         let volume_texture =
             VolumeTexture::new(&wgpu_render_state.device, &wgpu_render_state.queue, path);
 
-        let path = std::path::Path::new("app/src/shaders/raycast_naive.wgsl");
+        let path = std::path::Path::new("E:\\GitHub\\egui\\app\\src\\shaders\\raycast_naive.wgsl");
 
         let pipeline =
             RayCastPipeline::from_path(wgpu_render_state, path, &mut shader_compiler);
+
+        let camera = Camera::new(
+            1.,
+            0.5,
+            1.,
+            (0., 0., 0.).into(),
+            Self::WIDTH as f32 / Self::HEIGHT as f32,
+        );
 
 
         // Because the graphics pipeline must have the same lifetime as the egui render pass,
@@ -56,15 +65,17 @@ impl VolumeRenderer {
             .egui_rpass
             .write()
             .paint_callback_resources
-            .insert(());
-
-        Self {
-            shader_compiler,
-            volume_texture,
-            pipeline,
-            uniform: Uniform::default(),
-            uniform_binding: UniformBinding::new(&device)
-        }
+            .insert((
+                RenderResources {
+                    volume_texture,
+                    pipeline,
+                    camera,
+                    camera_binding: CameraBinding::new(&device),
+                    global_uniform: GlobalUniform::default(),
+                    global_uniform_binding: GlobalUniformBinding::new(&device),
+                }
+            ));
+        Self {}
     }
 }
 
@@ -97,38 +108,10 @@ impl eframe::App for VolumeRenderer {
 impl VolumeRenderer {
     fn painting(&mut self, ui: &mut egui::Ui) {
         let (rect, response) =
-
-            ui.allocate_exact_size(egui::Vec2::new(800., 600.), egui::Sense::drag());
-
-        // self.angle += response.drag_delta().x * 0.01;
-
-        // Clone locals so we can move them into the paint callback:
-        // let angle = self.angle;
-
-        // The callback function for WGPU is in two stages: prepare, and paint.
-        //
-        // The prepare callback is called every frame before paint and is given access to the wgpu
-        // Device and Queue, which can be used, for instance, to update buffers and uniforms before
-        // rendering.
-        //
-        // The paint callback is called after prepare and is given access to the render pass, which
-        // can be used to issue draw commands.
-        // let cb = egui_wgpu::CallbackFn::new()
-        //     .prepare(move |device, queue, paint_callback_resources| {
-        //         let resources: &TriangleRenderResources = paint_callback_resources.get().unwrap();
-        //         resources.prepare(device, queue, angle);
-        //     })
-        //     .paint(move |_info, rpass, paint_callback_resources| {
-        //         let resources: &TriangleRenderResources = paint_callback_resources.get().unwrap();
-        //         resources.paint(rpass);
-        //     });
-        //
-        // let callback = egui::PaintCallback {
-        //     rect,
-        //     callback: Arc::new(cb),
-        // };
-        //
-        // ui.painter().add(callback);
+            ui.allocate_exact_size(
+                egui::Vec2::new(Self::WIDTH as f32, Self::HEIGHT as f32),
+                egui::Sense::drag()
+            );
     }
 }
 
@@ -141,6 +124,7 @@ struct TriangleRenderResources {
 impl TriangleRenderResources {
     fn prepare(&self, _device: &wgpu::Device, queue: &wgpu::Queue, angle: f32) {
         // Update our uniform buffer with the angle from the UI
+
         queue.write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[angle]));
     }
 
@@ -149,5 +133,30 @@ impl TriangleRenderResources {
         rpass.set_pipeline(&self.pipeline);
         rpass.set_bind_group(0, &self.bind_group, &[]);
         rpass.draw(0..3, 0..1);
+    }
+}
+
+struct RenderResources {
+    volume_texture: VolumeTexture,
+    pipeline: RayCastPipeline,
+    camera: Camera,
+    camera_binding: CameraBinding,
+    global_uniform: GlobalUniform,
+    global_uniform_binding: GlobalUniformBinding,
+}
+
+impl RenderResources {
+    fn prepare(&self, _device: &wgpu::Device, queue: &wgpu::Queue, angle: f32) {
+        // Update our uniform buffer with the angle from the UI
+
+        // queue.write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[angle]));
+    }
+
+    fn paint<'rpass>(&'rpass self, rpass: &mut wgpu::RenderPass<'rpass>) {
+        // Draw our volume!
+        self.pipeline.record(rpass,
+                             &self.global_uniform_binding,
+                             &self.camera_binding,
+                             &self.volume_texture);
     }
 }

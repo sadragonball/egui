@@ -34,27 +34,11 @@ impl VolumeTexture {
 
     #[tracing::instrument]
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, path: &std::path::Path) -> Self {
-        let file = std::fs::File::open(path);
+        let mut file = std::fs::File::open(path).unwrap();
         let mut data: Vec<u8> = vec![];
-        tracing::debug_span!("hello");
 
-        match file {
-            Ok(mut file) => {
-                let result = file.read_to_end(&mut data);
-
-                match result {
-                    Ok(size) => {
-                        println!("{}", size);
-                    },
-                    Err(err) => {
-                        panic!("write bytes failed!\n{}", err);
-                    }
-                }
-            },
-            Err(err) => {
-                panic!("open file failed!\n{}", err);
-            }
-        };
+        file.read_to_end(&mut data).expect("read file failed");
+ 
         let size = wgpu::Extent3d {
             width: 256,
             height: 256,

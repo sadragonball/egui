@@ -1,22 +1,22 @@
 use wgpu::util::DeviceExt;
 use crate::utils::NonZeroSized;
 
-pub struct UniformBinding {
+pub struct GlobalUniformBinding {
     pub bind_group: wgpu::BindGroup,
     uniform_buffer: wgpu::Buffer
 }
 
-impl UniformBinding {
+impl GlobalUniformBinding {
     pub fn new(device: &wgpu::Device) -> Self {
         let buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Global Uniform"),
                 usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-                contents: bytemuck::bytes_of(&Uniform::default()),
+                contents: bytemuck::bytes_of(&GlobalUniform::default()),
             }
         );
 
-        let layout = device.create_bind_group_layout(&Uniform::DESC);
+        let layout = device.create_bind_group_layout(&GlobalUniform::DESC);
 
         let uniform_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("Global Uniform Bind Group"),
@@ -35,14 +35,14 @@ impl UniformBinding {
         }
     }
 
-    pub fn update(&mut self, queue: &wgpu::Queue, uniform: &Uniform) {
+    pub fn update(&mut self, queue: &wgpu::Queue, uniform: &GlobalUniform) {
         queue.write_buffer(&self.uniform_buffer, 0, bytemuck::bytes_of(uniform));
     }
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct Uniform {
+pub struct GlobalUniform {
     pub position: [f32; 3],
     pub frame: u32,
     pub resolution: [f32; 2],
@@ -53,7 +53,7 @@ pub struct Uniform {
     _padding: f32,
 }
 
-impl Default for Uniform {
+impl Default for GlobalUniform {
     fn default() -> Self {
         Self {
             position: [0.; 3],
@@ -69,7 +69,7 @@ impl Default for Uniform {
     }
 }
 
-impl Uniform {
+impl GlobalUniform {
     pub const DESC: wgpu::BindGroupLayoutDescriptor<'static> = wgpu::BindGroupLayoutDescriptor {
         label: Some("Global Uniform Bind Group Layout"),
         entries: &[wgpu::BindGroupLayoutEntry {
@@ -78,7 +78,7 @@ impl Uniform {
             ty: wgpu::BindingType::Buffer {
                 ty: wgpu::BufferBindingType::Uniform,
                 has_dynamic_offset: false,
-                min_binding_size: Some(Uniform::SIZE),
+                min_binding_size: Some(GlobalUniform::SIZE),
             },
             count: None,
         }],

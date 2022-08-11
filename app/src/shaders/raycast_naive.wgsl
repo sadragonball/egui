@@ -78,12 +78,8 @@ fn vertigo(t: f32) -> float3 {
     let b = vec3<f32>(0.3);
     let c = vec3<f32>(1.0, 1.7, 0.4);
     let d = vec3<f32>(0.0, 0.15, 0.20);
+
     return palette(t, a, b, c, d);
-
-    let a = vec3<f32>(1.);
-    let b = vec3<f32>(0.);
-
-    return palette(t, a, a, b,b);
 }
 
 @fragment

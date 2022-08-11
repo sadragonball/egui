@@ -97,8 +97,8 @@ fn run_and_return(mut event_loop: EventLoop<RequestRepaintEvent>, mut winit_app:
 
             winit::event::Event::UserEvent(RequestRepaintEvent)
             | winit::event::Event::NewEvents(winit::event::StartCause::ResumeTimeReached {
-                ..
-            }) => EventResult::RepaintAsap,
+                                                 ..
+                                             }) => EventResult::RepaintAsap,
 
             event => winit_app.on_event(event),
         };
@@ -159,8 +159,8 @@ fn run_and_exit(
 
             winit::event::Event::UserEvent(RequestRepaintEvent)
             | winit::event::Event::NewEvents(winit::event::StartCause::ResumeTimeReached {
-                ..
-            }) => EventResult::RepaintAsap,
+                                                 ..
+                                             }) => EventResult::RepaintAsap,
 
             event => winit_app.on_event(event),
         };
@@ -238,7 +238,7 @@ mod glow_integration {
                 storage,
                 Some(gl.clone()),
                 #[cfg(feature = "wgpu")]
-                None,
+                    None,
             );
             let theme = system_theme.unwrap_or(native_options.default_theme);
             integration.egui_ctx.set_visuals(theme.egui_visuals());
@@ -350,7 +350,7 @@ mod glow_integration {
             } else if repaint_after.is_zero() {
                 EventResult::RepaintAsap
             } else if let Some(repaint_after_instant) =
-                std::time::Instant::now().checked_add(repaint_after)
+            std::time::Instant::now().checked_add(repaint_after)
             {
                 // if repaint_after is something huge and can't be added to Instant,
                 // we will use `ControlFlow::Wait` instead.
@@ -398,10 +398,10 @@ mod glow_integration {
                             self.gl_window.resize(**new_inner_size);
                         }
                         winit::event::WindowEvent::CloseRequested
-                            if self.integration.should_quit() =>
-                        {
-                            return EventResult::Exit
-                        }
+                        if self.integration.should_quit() =>
+                            {
+                                return EventResult::Exit
+                            }
                         _ => {}
                     }
 
@@ -467,9 +467,11 @@ mod wgpu_integration {
                 .build(event_loop)
                 .unwrap();
 
+            println!("default features{:?}", wgpu::Features::default());
+
             // SAFETY: `window` must outlive `painter`.
             #[allow(unsafe_code)]
-            let painter = unsafe {
+                let painter = unsafe {
                 let mut painter = egui_wgpu::winit::Painter::new(
                     wgpu::Backends::PRIMARY | wgpu::Backends::GL,
                     wgpu::PowerPreference::HighPerformance,
@@ -496,7 +498,7 @@ mod wgpu_integration {
                 system_theme,
                 storage,
                 #[cfg(feature = "glow")]
-                None,
+                    None,
                 Some(wgpu_render_state.clone()),
             );
             let theme = system_theme.unwrap_or(native_options.default_theme);
@@ -598,7 +600,7 @@ mod wgpu_integration {
             } else if repaint_after.is_zero() {
                 EventResult::RepaintAsap
             } else if let Some(repaint_after_instant) =
-                std::time::Instant::now().checked_add(repaint_after)
+            std::time::Instant::now().checked_add(repaint_after)
             {
                 // if repaint_after is something huge and can't be added to Instant,
                 // we will use `ControlFlow::Wait` instead.
@@ -657,10 +659,10 @@ mod wgpu_integration {
                                 .on_window_resized(new_inner_size.width, new_inner_size.height);
                         }
                         winit::event::WindowEvent::CloseRequested
-                            if self.integration.should_quit() =>
-                        {
-                            return EventResult::Exit
-                        }
+                        if self.integration.should_quit() =>
+                            {
+                                return EventResult::Exit
+                            }
                         _ => {}
                     };
 

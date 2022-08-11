@@ -1,8 +1,10 @@
 use std::path::Path;
+use wgpu::RenderPass;
 use wgpu::util::DeviceExt;
 use eframe::egui_wgpu;
 use crate::modules::volume_renderer::camera::CameraBinding;
-use crate::modules::volume_renderer::render_resources::{UniformBinding, Uniform};
+use crate::modules::volume_renderer::render_resources::{GlobalUniformBinding, GlobalUniform};
+use crate::modules::volume_renderer::volume_texture::VolumeTexture;
 use crate::utils::shader_compiler::ShaderCompiler;
 
 pub struct RayCastPipeline {
@@ -48,7 +50,7 @@ impl RayCastPipeline {
     }
 
     fn make_pipeline(device: &wgpu::Device, target_format: &wgpu::TextureFormat, module: &wgpu::ShaderModule) -> wgpu::RenderPipeline {
-        let global_bind_group_layout = device.create_bind_group_layout(&Uniform::DESC);
+        let global_bind_group_layout = device.create_bind_group_layout(&GlobalUniform::DESC);
         let camera_bind_group_layout = device.create_bind_group_layout(&CameraBinding::DESC);
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -114,15 +116,17 @@ impl<'a> RayCastPipeline {
     pub fn record<'pass>(
         &'a self,
         render_pass: &mut wgpu::RenderPass<'pass>,
-        render_resources: &'a UniformBinding,
+        uniform_binding: &'a GlobalUniformBinding,
         camera_binding: &'a CameraBinding,
+        volume_texture: &'a VolumeTexture,
     )
         where 'a: 'pass {
         render_pass.set_pipeline(&self.pipeline);
         render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
 
-        render_pass.set_bind_group(0, &render_resources.bind_group, &[]);
+        render_pass.set_bind_group(0, &uniform_binding.bind_group, &[]);
         render_pass.set_bind_group(1, &camera_binding.bind_group, &[]);
+        render_pass.set_bind_group(2, &volume_texture.bind_group, &[]);
         render_pass.draw(0..self.vertex_count as _, 0..1);
     }
 }
