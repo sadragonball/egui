@@ -40,7 +40,7 @@ naga = { version = "0.9.0", features = ["span", "spv-out", "wgsl-in"] }
 glam = "0.21.3"
 color-eyre = "0.6.2"
 tracing = "0.1"
-rfd = "0.8"
+rfd = "0.10.0"
 
 
 #egui_demo_lib = { version = "0.18.0", path = "../egui_demo_lib", features = ["chrono"] }

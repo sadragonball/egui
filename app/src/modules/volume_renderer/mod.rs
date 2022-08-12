@@ -38,6 +38,7 @@ impl Default for Operation {
 
 pub struct VolumeRenderer {
     operation: Operation,
+    volume_path: String
 }
 
 
@@ -90,6 +91,7 @@ impl VolumeRenderer {
             ));
         Self {
             operation: Operation::default(),
+            volume_path: "".into()
         }
     }
 }
@@ -108,10 +110,19 @@ impl eframe::App for VolumeRenderer {
                     });
 
                     if ui.button("Open file…").clicked() {
-                        if let Some(path) = rfd::FileDialog::new().pick_file() {
-                            println!("{:?}", path.display().to_string());
-                        }
+                        let task = rfd::AsyncFileDialog::new().pick_file();
+
+                        execute(
+                            async {
+                                let file = task.await;
+                                if let Some(file) = file {
+                                    println!("{:?}", file.path());
+                                    // file.read().await;
+                                }
+                            }
+                        );
                     }
+
                     egui::Frame::canvas(ui.style()).show(ui, |ui| {
                         self.painting(ui);
                     });
@@ -120,6 +131,13 @@ impl eframe::App for VolumeRenderer {
                 });
         });
     }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn execute<F: std::future::Future<Output=()> + Send + 'static>(f: F) {
+
+    // this is stupid... use any executor of your choice instead
+    std::thread::spawn(move || pollster::block_on(f));
 }
 
 // for renderer

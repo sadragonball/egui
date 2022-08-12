@@ -104,8 +104,8 @@ impl Application {
 
     fn left_panel_contents(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         self.state.left_side_panel.ui(ui, frame);
-
         ui.separator();
+
 
         ui.horizontal(|ui| {
             if ui.button("Quit").clicked() {

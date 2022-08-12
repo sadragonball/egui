@@ -1,13 +1,11 @@
 use std::io::{Read, Write};
 use std::num::NonZeroU32;
-use egui::trace;
 
 #[derive(Debug)]
 pub struct VolumeTexture {
     pub texture: Option<wgpu::Texture>,
     pub bind_group: Option<wgpu::BindGroup>,
     pub sampler: Option<wgpu::Sampler>,
-    pub path: Option<String>
 }
 
 impl Default for VolumeTexture {
@@ -16,7 +14,6 @@ impl Default for VolumeTexture {
             texture: None,
             bind_group: None,
             sampler: None,
-            path: None
         }
     }
 }
@@ -112,7 +109,6 @@ impl VolumeTexture {
             texture: texture.into(),
             bind_group: bind_group.into(),
             sampler: sampler.into(),
-            path: Some(String::from(path.to_str().unwrap()))
         }
     }
 }
