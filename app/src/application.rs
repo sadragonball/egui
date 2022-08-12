@@ -1,15 +1,15 @@
-use std::time::Duration;
-use eframe::{App, Frame, Storage};
 use eframe::emath::Vec2;
 use eframe::epaint::Rgba;
+use eframe::{App, Frame, Storage};
 use egui::{Context, Visuals};
+use std::time::Duration;
 
 #[derive(Default)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct State {
     selected_anchor: String,
-    left_side_panel: crate::ui::LeftSidePanel
+    left_side_panel: crate::ui::LeftSidePanel,
 }
 
 pub struct Application {
@@ -25,7 +25,7 @@ impl Application {
         let mut app = Self {
             state: State::default(),
             volume_renderer: crate::modules::VolumeRenderer::new(cc),
-            dropped_files: Default::default()
+            dropped_files: Default::default(),
         };
 
         if let Some(storage) = cc.storage {
@@ -36,11 +36,11 @@ impl Application {
 
         app
     }
-    fn modules_iter_mut(&mut self) -> impl Iterator<Item=(&str, &str, &mut dyn eframe::App)> {
+    fn modules_iter_mut(&mut self) -> impl Iterator<Item = (&str, &str, &mut dyn eframe::App)> {
         let mut vec = vec![(
             "yingtan volume renderer",
             "volume_renderer",
-            &mut self.volume_renderer as &mut dyn eframe::App
+            &mut self.volume_renderer as &mut dyn eframe::App,
         )];
 
         vec.into_iter()
@@ -105,7 +105,6 @@ impl Application {
     fn left_panel_contents(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         self.state.left_side_panel.ui(ui, frame);
         ui.separator();
-
 
         ui.horizontal(|ui| {
             if ui.button("Quit").clicked() {

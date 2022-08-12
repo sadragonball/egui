@@ -1,19 +1,15 @@
-use std::sync::Arc;
-use std::time::Duration;
-use wgpu::Device;
-use wgpu::util::DeviceExt;
-use eframe::{egui_wgpu, Storage};
-use eframe::epaint::Rgba;
-use egui::{Visuals};
 use crate::modules::volume_renderer::camera::{Camera, CameraBinding};
-use crate::modules::volume_renderer::ray_cast_pipeline::RayCastPipeline;
 use crate::modules::volume_renderer::global_uniform::{GlobalUniform, GlobalUniformBinding};
+use crate::modules::volume_renderer::ray_cast_pipeline::RayCastPipeline;
 use crate::modules::volume_renderer::volume_texture::VolumeTexture;
 use crate::utils::shader_compiler::ShaderCompiler;
+use eframe::egui_wgpu;
+use std::io::Read;
+use std::sync::Arc;
 
 mod camera;
-mod ray_cast_pipeline;
 mod global_uniform;
+mod ray_cast_pipeline;
 mod volume_texture;
 
 //待定
@@ -38,9 +34,8 @@ impl Default for Operation {
 
 pub struct VolumeRenderer {
     operation: Operation,
-    volume_path: String
+    volume_path: String,
 }
-
 
 impl VolumeRenderer {
     pub const WIDTH: u32 = 800;
@@ -53,15 +48,14 @@ impl VolumeRenderer {
 
         let mut shader_compiler = ShaderCompiler::new();
 
-        let path = std::path::Path::new("E:\\Github\\egui\\app\\raws\\bonsai_256x256x256_uint8.raw");
+        let path =
+            std::path::Path::new("E:\\Github\\egui\\app\\raws\\bonsai_256x256x256_uint8.raw");
 
-        let volume_texture =
-            VolumeTexture::new(&wgpu_render_state.device, &wgpu_render_state.queue, path);
+        let volume_texture = VolumeTexture::new(device, &wgpu_render_state.queue, path);
 
-        let path = std::path::Path::new("shaders/raycast_naive.wgsl");
+        let path = std::path::Path::new("E:/Github/egui/app/shaders/raycast_naive.wgsl");
 
-        let pipeline =
-            RayCastPipeline::from_path(wgpu_render_state, path, &mut shader_compiler);
+        let pipeline = RayCastPipeline::from_path(wgpu_render_state, path, &mut shader_compiler);
 
         let camera = Camera::new(
             2.,
@@ -71,7 +65,6 @@ impl VolumeRenderer {
             Self::WIDTH as f32 / Self::HEIGHT as f32,
         );
 
-
         // Because the graphics pipeline must have the same lifetime as the egui render pass,
         // instead of storing the pipeline in our `Custom3D` struct, we insert it into the
         // `paint_callback_resources` type map, which is stored alongside the render pass.
@@ -79,19 +72,19 @@ impl VolumeRenderer {
             .egui_rpass
             .write()
             .paint_callback_resources
-            .insert((
-                RenderResources {
+            .insert(
+                (RenderResources {
                     volume_texture,
                     pipeline,
                     camera,
                     camera_binding: CameraBinding::new(&device),
                     global_uniform: GlobalUniform::default(),
                     global_uniform_binding: GlobalUniformBinding::new(&device),
-                }
-            ));
+                }),
+            );
         Self {
             operation: Operation::default(),
-            volume_path: "".into()
+            volume_path: "".into(),
         }
     }
 }
@@ -108,19 +101,20 @@ impl eframe::App for VolumeRenderer {
                         ui.hyperlink_to("wgpu", "https://wgpu.rs");
                         ui.label(" Rust graphics api");
                     });
-
                     if ui.button("Open file…").clicked() {
-                        let task = rfd::AsyncFileDialog::new().pick_file();
+                        let (path, data) = pollster::block_on(read_volume_file());
+                        self.volume_path = path;
+                        // let task = rfd::AsyncFileDialog::new().pick_file();
 
-                        execute(
-                            async {
-                                let file = task.await;
-                                if let Some(file) = file {
-                                    println!("{:?}", file.path());
-                                    // file.read().await;
-                                }
-                            }
-                        );
+                        // execute(async {
+                        //     let file = task.await;
+                        //     if let Some(file) = file {
+                        //         println!("{:?}", file.path());
+                        //         // self.volume_path = file.file_name();
+                        //         // file.read().await;
+                        //         // self.volume_path = file.path();
+                        //     }
+                        // });
                     }
 
                     egui::Frame::canvas(ui.style()).show(ui, |ui| {
@@ -133,9 +127,21 @@ impl eframe::App for VolumeRenderer {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-fn execute<F: std::future::Future<Output=()> + Send + 'static>(f: F) {
+async fn read_volume_file() -> (String, Vec<u8>) {
+    let task = rfd::AsyncFileDialog::new().pick_file();
+    let mut data: Vec<u8> = vec![];
+    let mut path = String::new();
 
+    let file = task.await;
+    if let Some(file) = file {
+        path = String::from(file.path().to_str().unwrap());
+        let mut file = std::fs::File::open(file.path()).unwrap();
+        file.read_to_end(&mut data).expect("read file failed");
+    }
+    return (path, data);
+}
+
+fn execute<F: std::future::Future<Output = ()> + Send + 'static>(f: F) {
     // this is stupid... use any executor of your choice instead
     std::thread::spawn(move || pollster::block_on(f));
 }
@@ -143,18 +149,17 @@ fn execute<F: std::future::Future<Output=()> + Send + 'static>(f: F) {
 // for renderer
 impl VolumeRenderer {
     fn painting(&mut self, ui: &mut egui::Ui) {
-        let (rect, response) =
-            ui.allocate_exact_size(
-                egui::Vec2::new(Self::WIDTH as f32, Self::HEIGHT as f32),
-                egui::Sense::drag()
-            );
+        let (rect, response) = ui.allocate_exact_size(
+            egui::Vec2::new(Self::WIDTH as f32, Self::HEIGHT as f32),
+            egui::Sense::drag(),
+        );
 
         self.operation = Operation {
-            drag_delta: response.drag_delta()
+            drag_delta: response.drag_delta(),
         };
 
         let operation = Operation {
-            drag_delta: response.drag_delta()
+            drag_delta: response.drag_delta(),
         };
 
         let func = egui_wgpu::CallbackFn::new()
@@ -169,7 +174,7 @@ impl VolumeRenderer {
 
         let callback = egui::PaintCallback {
             rect,
-            callback: Arc::new(func)
+            callback: Arc::new(func),
         };
 
         ui.painter().add(callback);
@@ -189,16 +194,20 @@ impl RenderResources {
     pub const ROTATE_SPEED: f32 = 0.005f32;
     fn prepare(&mut self, _device: &wgpu::Device, queue: &wgpu::Queue, operation: Operation) {
         // Update our uniform buffer with the angle from the UI
-        self.camera.add_yaw(-operation.drag_delta.x as f32 * Self::ROTATE_SPEED);
-        self.camera.add_pitch(-operation.drag_delta.y as f32 * Self::ROTATE_SPEED);
+        self.camera
+            .add_yaw(-operation.drag_delta.x as f32 * Self::ROTATE_SPEED);
+        self.camera
+            .add_pitch(-operation.drag_delta.y as f32 * Self::ROTATE_SPEED);
         self.camera_binding.update(queue, &mut self.camera);
     }
 
     fn paint<'rpass>(&'rpass self, rpass: &mut wgpu::RenderPass<'rpass>) {
         // Draw our volume!
-        self.pipeline.record(rpass,
-                             &self.global_uniform_binding,
-                             &self.camera_binding,
-                             &self.volume_texture);
+        self.pipeline.record(
+            rpass,
+            &self.global_uniform_binding,
+            &self.camera_binding,
+            &self.volume_texture,
+        );
     }
 }
