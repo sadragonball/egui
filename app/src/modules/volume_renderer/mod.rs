@@ -51,7 +51,12 @@ impl VolumeRenderer {
         let path =
             std::path::Path::new("E:\\Github\\egui\\app\\raws\\bonsai_256x256x256_uint8.raw");
 
-        let volume_texture = VolumeTexture::new(device, &wgpu_render_state.queue, path);
+        let volume_texture = VolumeTexture::new(
+            device,
+            &wgpu_render_state.queue,
+            &volume_texture::VolumeHeader::default(),
+            &vec![],
+        );
 
         let path = std::path::Path::new("E:/Github/egui/app/shaders/raycast_naive.wgsl");
 
