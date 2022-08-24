@@ -48,8 +48,7 @@ impl VolumeRenderer {
 
         let mut shader_compiler = ShaderCompiler::new();
 
-        let path =
-            std::path::Path::new("E:\\Github\\egui\\app\\raws\\bonsai_256x256x256_uint8.raw");
+        let path = std::path::Path::new("E:\\Github\\egui\\app\\raws\\test_256x256x256_uint8.raw");
 
         let volume_texture = VolumeTexture::new(device, &wgpu_render_state.queue, path);
 

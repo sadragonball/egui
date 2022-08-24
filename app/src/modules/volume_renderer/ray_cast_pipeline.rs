@@ -1,11 +1,11 @@
-use std::path::Path;
-use wgpu::{BindGroup, RenderPass};
-use wgpu::util::DeviceExt;
-use eframe::egui_wgpu;
 use crate::modules::volume_renderer::camera::CameraBinding;
-use crate::modules::volume_renderer::global_uniform::{GlobalUniformBinding, GlobalUniform};
+use crate::modules::volume_renderer::global_uniform::{GlobalUniform, GlobalUniformBinding};
 use crate::modules::volume_renderer::volume_texture::VolumeTexture;
 use crate::utils::shader_compiler::ShaderCompiler;
+use eframe::egui_wgpu;
+use std::path::Path;
+use wgpu::util::DeviceExt;
+use wgpu::{BindGroup, RenderPass};
 
 pub struct RayCastPipeline {
     pub pipeline: wgpu::RenderPipeline,
@@ -14,34 +14,45 @@ pub struct RayCastPipeline {
 }
 
 impl RayCastPipeline {
-    pub fn from_path(render_state: &egui_wgpu::RenderState,
-                     path: &std::path::Path,
-                     shader_compiler: &mut ShaderCompiler) -> Self {
+    pub fn from_path(
+        render_state: &egui_wgpu::RenderState,
+        path: &std::path::Path,
+        shader_compiler: &mut ShaderCompiler,
+    ) -> Self {
         let shader = unsafe {
-            render_state.device.create_shader_module_spirv(&wgpu::ShaderModuleDescriptorSpirV {
-                label: path.to_str(),
-                source: shader_compiler.create_shader_module(path).unwrap().into(),
-            })
+            render_state
+                .device
+                .create_shader_module_spirv(&wgpu::ShaderModuleDescriptorSpirV {
+                    label: path.to_str(),
+                    source: shader_compiler.create_shader_module(path).unwrap().into(),
+                })
         };
 
         Self::new_with_module(render_state, &shader)
     }
 
-    pub fn new_with_module(render_state: &egui_wgpu::RenderState, module: &wgpu::ShaderModule) -> Self {
+    pub fn new_with_module(
+        render_state: &egui_wgpu::RenderState,
+        module: &wgpu::ShaderModule,
+    ) -> Self {
         let vertices = [
             1., 1., 0., 0., 1., 0., 1., 1., 1., 0., 1., 1., 0., 0., 1., 0., 1., 0., 0., 0., 0., 1.,
             1., 0., 1., 0., 0., 1., 1., 1., 1., 0., 1., 0., 0., 1., 1., 0., 0., 0., 0., 0.,
         ];
 
-        let vertex_buffer = render_state.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Volume Vertex Buffer"),
-            contents: bytemuck::cast_slice::<f32, _>(&vertices),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
+        let vertex_buffer =
+            render_state
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Volume Vertex Buffer"),
+                    contents: bytemuck::cast_slice::<f32, _>(&vertices),
+                    usage: wgpu::BufferUsages::VERTEX,
+                });
 
         let vertex_count = vertices.len() / 3;
 
-        let pipeline = Self::make_pipeline(&render_state.device, &render_state.target_format, module);
+        let pipeline =
+            Self::make_pipeline(&render_state.device, &render_state.target_format, module);
         Self {
             pipeline,
             vertex_buffer,
@@ -49,7 +60,11 @@ impl RayCastPipeline {
         }
     }
 
-    fn make_pipeline(device: &wgpu::Device, target_format: &wgpu::TextureFormat, module: &wgpu::ShaderModule) -> wgpu::RenderPipeline {
+    fn make_pipeline(
+        device: &wgpu::Device,
+        target_format: &wgpu::TextureFormat,
+        module: &wgpu::ShaderModule,
+    ) -> wgpu::RenderPipeline {
         let global_bind_group_layout = device.create_bind_group_layout(&GlobalUniform::DESC);
         let camera_bind_group_layout = device.create_bind_group_layout(&CameraBinding::DESC);
         let texture_bind_group_layout =
@@ -119,8 +134,9 @@ impl<'a> RayCastPipeline {
         uniform_binding: &'a GlobalUniformBinding,
         camera_binding: &'a CameraBinding,
         volume_texture: &'a VolumeTexture,
-    )
-        where 'a: 'pass {
+    ) where
+        'a: 'pass,
+    {
         render_pass.set_pipeline(&self.pipeline);
         render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
 

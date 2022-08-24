@@ -37,6 +37,7 @@ var volume: texture_3d<f32>;
 @group(2) @binding(1)
 var tex_sampler: sampler;
 
+
 @vertex
 fn vs_main(vert: VertexInput) -> VertexOutput {
     var vout: VertexOutput;
